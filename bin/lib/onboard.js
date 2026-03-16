@@ -5,7 +5,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { ROOT, SCRIPTS, run, runCapture } = require("./runner");
+const { ROOT, SHELL_SCRIPTS, run, runCapture, ensureSupportedHost } = require("./runner");
 const { prompt, ensureApiKey, getCredential } = require("./credentials");
 const registry = require("./registry");
 const nim = require("./nim");
@@ -40,13 +40,14 @@ function isOpenshellInstalled() {
 
 function installOpenshell() {
   console.log("  Installing openshell CLI...");
-  run(`bash "${path.join(SCRIPTS, "install.sh")}"`, { ignoreError: true });
+  run(`bash "${SHELL_SCRIPTS}/install.sh"`, { ignoreError: true });
   return isOpenshellInstalled();
 }
 
 // ── Step 1: Preflight ────────────────────────────────────────────
 
 async function preflight() {
+  ensureSupportedHost();
   step(1, 7, "Preflight checks");
 
   // Docker
@@ -112,7 +113,7 @@ async function startGateway(gpu) {
   const colimaSocket = path.join(process.env.HOME || "/tmp", ".colima/default/docker.sock");
   if (fs.existsSync(colimaSocket)) {
     console.log("  Patching CoreDNS for Colima...");
-    run(`bash "${path.join(SCRIPTS, "fix-coredns.sh")}" 2>&1 || true`, { ignoreError: true });
+    run(`bash "${SHELL_SCRIPTS}/fix-coredns.sh" 2>&1 || true`, { ignoreError: true });
   }
   // Give DNS a moment to propagate
   require("child_process").spawnSync("sleep", ["5"]);

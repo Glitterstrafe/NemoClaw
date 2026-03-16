@@ -7,7 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 
-const { ROOT, SCRIPTS, run, runCapture } = require("./lib/runner");
+const { ROOT, SHELL_SCRIPTS, run, runCapture, ensureSupportedHost } = require("./lib/runner");
 const {
   ensureApiKey,
   ensureGithubToken,
@@ -29,22 +29,25 @@ const GLOBAL_COMMANDS = new Set([
 // ── Commands ─────────────────────────────────────────────────────
 
 async function onboard() {
+  ensureSupportedHost();
   const { onboard: runOnboard } = require("./lib/onboard");
   await runOnboard();
 }
 
 async function setup() {
+  ensureSupportedHost();
   console.log("");
   console.log("  ⚠  `nemoclaw setup` is deprecated. Use `nemoclaw onboard` instead.");
   console.log("     Running legacy setup.sh for backwards compatibility...");
   console.log("");
   await ensureApiKey();
-  run(`bash "${SCRIPTS}/setup.sh"`);
+  run(`bash "${SHELL_SCRIPTS}/setup.sh"`);
 }
 
 async function setupSpark() {
+  ensureSupportedHost();
   await ensureApiKey();
-  run(`sudo -E NVIDIA_API_KEY="${process.env.NVIDIA_API_KEY}" bash "${SCRIPTS}/setup-spark.sh"`);
+  run(`sudo -E NVIDIA_API_KEY="${process.env.NVIDIA_API_KEY}" bash "${SHELL_SCRIPTS}/setup-spark.sh"`);
 }
 
 async function deploy(instanceName) {
@@ -133,12 +136,14 @@ async function deploy(instanceName) {
 }
 
 async function start() {
+  ensureSupportedHost();
   await ensureApiKey();
-  run(`bash "${SCRIPTS}/start-services.sh"`);
+  run(`bash "${SHELL_SCRIPTS}/start-services.sh"`);
 }
 
 function stop() {
-  run(`bash "${SCRIPTS}/start-services.sh" --stop`);
+  ensureSupportedHost();
+  run(`bash "${SHELL_SCRIPTS}/start-services.sh" --stop`);
 }
 
 function showStatus() {
@@ -156,7 +161,8 @@ function showStatus() {
   }
 
   // Show service status
-  run(`bash "${SCRIPTS}/start-services.sh" --status`);
+  ensureSupportedHost();
+  run(`bash "${SHELL_SCRIPTS}/start-services.sh" --status`);
 }
 
 function listSandboxes() {
